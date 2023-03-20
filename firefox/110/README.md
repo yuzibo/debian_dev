@@ -1,6 +1,6 @@
 This is an experimental patch.
 
-# usgae
+# usage
 
 ## 1. Download source code 
 
