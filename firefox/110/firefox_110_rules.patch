@@ -1,0 +1,16 @@
+--- firefox-110.0.1/debian/rules	2023-03-01 07:34:37.000000000 +0800
++++ ../110/firefox-110.0.1/debian/rules	2023-03-20 06:27:43.968529944 +0800
+@@ -35,7 +35,12 @@
+ $(foreach lib,$(sort $(call uc,$(SYSTEM_LIBS))),$(eval $(call system_lib,$(lib))))
+ 
+ OFFICIAL_BRANDING := browser/branding/official
+-MOZILLA_OFFICIAL := 1
++
++# riscv64
++#MOZILLA_OFFICIAL := 1
++ifneq (riscv64,$(DEB_HOST_ARCH))
++	MOZILLA_OFFICIAL := 1
++endif
+ # ESR, Beta and Releases use the official branding
+ ifneq (,$(filter release beta esr%,$(SHORT_SOURCE_CHANNEL)))
+ BRANDING ?= $(OFFICIAL_BRANDING)

@@ -1,0 +1,32 @@
+--- firefox-110.0.1/debian/browser.mozconfig.in	2023-03-01 07:34:37.000000000 +0800
++++ ../110/firefox-110.0.1/debian/browser.mozconfig.in	2023-03-20 06:26:48.676302331 +0800
+@@ -1,7 +1,19 @@
+ # Please don't use this mozconfig unless you are planning to build
+ # packages for Debian or a derivative.
++
+ ac_add_options --with-app-name=@browser@
+-ac_add_options --enable-release
++# riscv64
++# rv64 change
++#ac_add_options --disable-release
++#ac_add_options --disable-optimize
++#ac_add_options --enable-linker=bfd
++ac_add_options --disable-jit
++ac_add_options --disable-debug
++ac_add_options --disable-debug-symbols
++ac_add_options --without-wasm-sandboxed-libraries
++ac_add_options --disable-geckodriver
++#ac_add_options --enable-release
++#
+ ac_add_options --enable-default-toolkit=cairo-gtk3-wayland
+ ac_add_options --with-google-location-service-api-keyfile=$topsrcdir/debian/google.key
+ ac_add_options --with-google-safebrowsing-api-keyfile=$topsrcdir/debian/google.key
+@@ -23,6 +35,8 @@
+ %if USE_SYSTEM_NSS
+ ac_add_options --with-system-nss # MOZ_SYSTEM_NSS=1
+ %endif
++
++# Unchange
+ %if USE_SYSTEM_VPX
+ ac_add_options --with-system-libvpx # MOZ_SYSTEM_LIBVPX=1
+ %endif
