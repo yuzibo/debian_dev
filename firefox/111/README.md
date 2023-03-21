@@ -9,6 +9,10 @@ You can download it with $(apt source firefox).
 
 You can modify the config options on `debian/rules` or `debian/browser.mozconfig.in` by hand one by one.
 
+# Binary packages
+
+The built package you can download from [google drive](https://drive.google.com/drive/folders/1QR0rbP66Qf0bdukCtmXM98IreoEzRENt)
+
 # Plan
 
 Unfortunately, The firefox has not been built on real riscv64 hardware. But I hopefully
