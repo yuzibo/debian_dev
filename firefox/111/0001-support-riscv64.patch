@@ -1,0 +1,45 @@
+From 3311c09e007337343984dd7e24e7ef280de041ff Mon Sep 17 00:00:00 2001
+From: Bo YU <tsu.yubo@gmail.com>
+Date: Mon, 20 Mar 2023 21:07:55 +0800
+Subject: [PATCH] support riscv64
+
+Signed-off-by: Bo YU <tsu.yubo@gmail.com>
+---
+ debian/browser.mozconfig.in | 6 +++++-
+ debian/rules                | 4 +++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/debian/browser.mozconfig.in b/debian/browser.mozconfig.in
+index 1836cdbde19..5f7f2b68881 100644
+--- a/debian/browser.mozconfig.in
++++ b/debian/browser.mozconfig.in
+@@ -30,6 +30,10 @@ ac_add_options --disable-updater
+ ac_add_options --with-unsigned-addon-scopes=app,system
+ ac_add_options --allow-addon-sideload
+ ac_add_options --enable-alsa
+-%if DIST == bullseye || DIST == buster || DIST == stretch || DEB_HOST_ARCH == s390x
++%if DIST == bullseye || DIST == buster || DIST == stretch || DEB_HOST_ARCH == s390x || DEB_HOST_ARCH == riscv64
+ ac_add_options --without-wasm-sandboxed-libraries
+ %endif
++%if DEB_HOST_ARCH == riscv64
++ac_add_options --disable-debug
++ac_add_options --disable-debug-symbols
++%endif
+diff --git a/debian/rules b/debian/rules
+index d35ca9256af..20ac1f85999 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -35,7 +35,9 @@ endef
+ $(foreach lib,$(sort $(call uc,$(SYSTEM_LIBS))),$(eval $(call system_lib,$(lib))))
+ 
+ OFFICIAL_BRANDING := browser/branding/official
+-MOZILLA_OFFICIAL := 1
++ifneq (riscv64,$(DEB_HOST_ARCH))
++	MOZILLA_OFFICIAL := 1
++endif
+ # ESR, Beta and Releases use the official branding
+ ifneq (,$(filter release beta esr%,$(SHORT_SOURCE_CHANNEL)))
+ BRANDING ?= $(OFFICIAL_BRANDING)
+-- 
+2.39.2
+
