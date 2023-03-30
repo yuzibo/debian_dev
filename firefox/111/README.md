@@ -13,6 +13,10 @@ You can modify the config options on `debian/rules` or `debian/browser.mozconfig
 
 The built package you can download from [google drive](https://drive.google.com/drive/folders/1QR0rbP66Qf0bdukCtmXM98IreoEzRENt)
 
+# OBS
+
+The package can be built on [obs](https://build.tarsier-infra.com/package/show/home:vimer:debian_riscv64/firefox-111) also.
+
 # Plan
 
 Unfortunately, The firefox has not been built on real riscv64 hardware. But I hopefully

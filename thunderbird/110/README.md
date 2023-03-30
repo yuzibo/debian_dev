@@ -15,3 +15,7 @@ gbp buildpackage   --git-builder=sbuild  --arch=riscv64 -c sid-riscv64-sbuild --
 # binary packages
 
 [here](https://drive.google.com/drive/folders/1klWvrjq-geMFAWIXTas6lPz8e8_7Eavo?usp=share_link)
+
+# obs
+
+The package can be built on [obs](https://build.tarsier-infra.com/package/show/home:vimer:debian_riscv64/thunderbird-110) also.
