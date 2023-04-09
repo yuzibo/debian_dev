@@ -1,0 +1,30 @@
+diff -Nru firefox-111.0.1/debian/browser.mozconfig.in firefox-111.0.1/debian/browser.mozconfig.in
+--- firefox-111.0.1/debian/browser.mozconfig.in	2023-03-25 04:21:01.000000000 +0800
++++ firefox-111.0.1/debian/browser.mozconfig.in	2023-03-25 04:21:58.000000000 +0800
+@@ -30,6 +30,12 @@
+ ac_add_options --with-unsigned-addon-scopes=app,system
+ ac_add_options --allow-addon-sideload
+ ac_add_options --enable-alsa
+-%if DIST == bullseye || DIST == buster || DIST == stretch || DEB_HOST_ARCH == s390x
++%if DIST == bullseye || DIST == buster || DIST == stretch || DEB_HOST_ARCH == s390x || DEB_HOST_ARCH == riscv64
+ ac_add_options --without-wasm-sandboxed-libraries
+ %endif
++%if DEB_HOST_ARCH ==riscv64
++ac_add_options --enable-jit
++ac_add_options --disable-geckodriver
++ac_add_options --disable-debug
++ac_add_options --disable-debug-symbols
++%endif
+diff -Nru firefox-111.0.1/debian/rules firefox-111.0.1/debian/rules
+--- firefox-111.0.1/debian/rules	2023-03-25 04:21:01.000000000 +0800
++++ firefox-111.0.1/debian/rules	2023-03-25 04:21:58.000000000 +0800
+@@ -35,7 +35,9 @@
+ $(foreach lib,$(sort $(call uc,$(SYSTEM_LIBS))),$(eval $(call system_lib,$(lib))))
+ 
+ OFFICIAL_BRANDING := browser/branding/official
++ifneq (riscv64,$(DEB_HOST_ARCH))
+ MOZILLA_OFFICIAL := 1
++endif
+ # ESR, Beta and Releases use the official branding
+ ifneq (,$(filter release beta esr%,$(SHORT_SOURCE_CHANNEL)))
+ BRANDING ?= $(OFFICIAL_BRANDING)
