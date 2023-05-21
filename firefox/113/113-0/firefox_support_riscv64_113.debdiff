@@ -1,0 +1,87 @@
+diff -Nru firefox-113.0/debian/browser.mozconfig.in firefox-113.0/debian/browser.mozconfig.in
+--- firefox-113.0/debian/browser.mozconfig.in	2023-05-10 05:44:52.000000000 +0800
++++ firefox-113.0/debian/browser.mozconfig.in	2023-04-18 10:10:16.000000000 +0800
+@@ -30,6 +30,15 @@
+ ac_add_options --with-unsigned-addon-scopes=app,system
+ ac_add_options --allow-addon-sideload
+ ac_add_options --enable-alsa
+-%if DIST == bullseye || DIST == buster || DIST == stretch || DEB_HOST_ARCH == s390x
++%if DIST == bullseye || DIST == buster || DIST == stretch || DEB_HOST_ARCH == s390x || DEB_HOST_ARCH == riscv64
+ ac_add_options --without-wasm-sandboxed-libraries
+ %endif
++# riscv64
++%if DEB_HOST_ARCH == riscv64
++ac_add_options --disable-debug
++ac_add_options --disable-lto
++ac_add_options --disable-debug-symbols
++ac_add_options --disable-geckodriver
++ac_add_options --enable-linker=bfd
++#ac_add_options --enable-jit
++%endif
+diff -Nru firefox-113.0/debian/changelog firefox-113.0/debian/changelog
+--- firefox-113.0/debian/changelog	2023-05-10 05:47:20.000000000 +0800
++++ firefox-113.0/debian/changelog	2023-04-18 10:10:16.000000000 +0800
+@@ -1,3 +1,10 @@
++firefox (113.0-1.1.1) UNRELEASED; urgency=medium
++
++  * Non-maintainer upload.
++  * Add support for riscv64. (Closes: #1012218)
++
++ -- Bo YU <tsu.yubo@gmail.com>  Tue, 18 Apr 2023 10:10:16 +0800
++
+ firefox (113.0-1) unstable; urgency=medium
+ 
+   * New upstream release.
+diff -Nru firefox-113.0/debian/control firefox-113.0/debian/control
+--- firefox-113.0/debian/control	2023-05-10 05:47:20.000000000 +0800
++++ firefox-113.0/debian/control	2023-04-18 10:10:16.000000000 +0800
+@@ -726,11 +726,11 @@
+ Section: localization
+ Depends: ${misc:Depends},
+          firefox (>= ${source:Version}), firefox (<< ${source:Version}.1~)
+-Description: Central Khmer language package for Firefox
++Description: Khmer language package for Firefox
+  Firefox is a powerful, extensible web browser with support for modern
+  web application technologies.
+  .
+- This package contains the localization of Firefox in Central Khmer.
++ This package contains the localization of Firefox in Khmer.
+ 
+ Package: firefox-l10n-kn
+ Architecture: all
+diff -Nru firefox-113.0/debian/l10n/browser-l10n.control firefox-113.0/debian/l10n/browser-l10n.control
+--- firefox-113.0/debian/l10n/browser-l10n.control	2023-05-10 05:47:20.000000000 +0800
++++ firefox-113.0/debian/l10n/browser-l10n.control	2023-04-18 10:10:16.000000000 +0800
+@@ -324,7 +324,7 @@
+ %include @PRODUCT@-l10n.control.in
+ 
+ %define L10N_LANG km
+-%define L10N_LANGUAGE Central Khmer
++%define L10N_LANGUAGE Khmer
+ %undef L10N_RECOMMENDS
+ %define L10N_TRANSITION 1
+ %include @PRODUCT@-l10n.control.in
+diff -Nru firefox-113.0/debian/rules firefox-113.0/debian/rules
+--- firefox-113.0/debian/rules	2023-05-10 05:44:52.000000000 +0800
++++ firefox-113.0/debian/rules	2023-04-18 10:10:16.000000000 +0800
+@@ -35,7 +35,9 @@
+ $(foreach lib,$(sort $(call uc,$(SYSTEM_LIBS))),$(eval $(call system_lib,$(lib))))
+ 
+ OFFICIAL_BRANDING := browser/branding/official
+-MOZILLA_OFFICIAL := 1
++ifneq (riscv64,$(DEB_HOST_ARCH))
++       MOZILLA_OFFICIAL := 1
++endif
+ # ESR, Beta and Releases use the official branding
+ ifneq (,$(filter release beta esr%,$(SHORT_SOURCE_CHANNEL)))
+ BRANDING ?= $(OFFICIAL_BRANDING)
+@@ -97,7 +99,9 @@
+ # Make the linker generate compressed debug sections. dh_strip would do
+ # the same anyways, but it allows elfhack to work in combination with
+ # unstripped binaries when they would normally be larger than 2GiB.
++ifneq (riscv64,$(DEB_HOST_ARCH))
+ LDFLAGS += -Wl,--compress-debug-sections=zlib
++endif
+ 
+ # Disable debug symbols when building on 32-bits machines, because
+ # a) the rust compiler can't deal with it in the available address
