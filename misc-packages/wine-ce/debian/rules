@@ -7,35 +7,28 @@ export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 
 DEB_WINE_DIR=$(CURDIR)/debian/wine-ce/usr
 DEB_QEMU_DIR=$(CURDIR)/debian/build_qemu
-PE_ARCHES="i386 aarch64 x86_64"
+PE_ARCHES="i386,aarch64,x86_64"
 
-#CONFIG_PRE=i386_CC="clang -fuse-ld=lld --target=i686-pc-windows"  \
-	   x86_64_CC="clang -fuse-ld=lld --target=x86_64-pc-windows" \
-	   x86_64_UNIX_CC="clang -fuse-ld=lld --target=x86_64-pc-linux --sysroot=/usr/x86_64-linux-gnu/ -L/usr/lib/gcc-cross/x86_64-linux-gnu/12/" \
-	   aarch64_CC="clang -fuse-ld=lld --target=aarch64-pc-windows" \
-	   aarch64_UNIX_CC="clang -fuse-ld=lld --target=aarch64-pc-linux --sysroot=/usr/aarch64-linux-gnu/ -L/usr/lib/gcc-cross/aarch64-linux-gnu/12/" \
-
-CONFIG_PRE=i386_CC="clang -fuse-ld=lld --target=i686-pc-windows"  \
-	   aarch64_CC="clang -fuse-ld=lld --target=aarch64-pc-windows" \
-	   aarch64_UNIX_CC="clang -fuse-ld=lld --target=aarch64-pc-linux --sysroot=/usr/aarch64-linux-gnu/ -L/usr/lib/gcc-cross/aarch64-linux-gnu/12/" \
-	   x86_64_CC="clang -fuse-ld=lld --target=x86_64-pc-windows" \
-	   x86_64_UNIX_CC="clang -fuse-ld=lld --target=x86_64-pc-linux --sysroot=/usr/x86_64-linux-gnu/ -L/usr/lib/gcc-cross/x86_64-linux-gnu/12/" 
+CONFIG_PRE=i386_CC="clang -fuse-ld=lld --target=i686-pc-windows" \
+		x86_64_CC="clang -fuse-ld=lld --target=x86_64-pc-windows" \
+		x86_64_UNIX_CC="clang -fuse-ld=lld --target=x86_64-pc-linux -I/usr/x86_64-linux-gnu/include" \
+		aarch64_CC="clang -fuse-ld=lld --target=aarch64-pc-windows" \
+		aarch64_UNIX_CC="clang -fuse-ld=lld --target=aarch64-pc-linux -I/usr/aarch64-linux-gnu/include -march=armv8+lse" \
 
 
 %:
 	dh $@
 
 override_dh_auto_configure:
-	cd $(CURDIR)/wine && echo $(CONFIG_PRE) && ./configure --prefix="$(DEB_WINE_DIR)" --disable-tests --enable-archs=$(PE_ARCHES) 
+	cd $(CURDIR)/wine && ./configure --prefix="$(DEB_WINE_DIR)" --disable-tests --enable-archs=$(PE_ARCHES) 
 
-	exit 1
 
 override_dh_auto_build:
 	cd $(CURDIR)/wine && $(MAKE) -j$(shell nproc) 
 	mkdir -p $(DEB_QEMU_DIR) && cd $(DEB_QEMU_DIR) && CC=gcc CC_FOR_BUILD="$CC" CXX="$CC" HOST_CC="$CC" \
 		LDFLAGS="-Wl,-Ttext-segment=0x100000000 \
-		-Wl,-z,max-page-size=0x1000 -Wl,-Bstatic,-lglib-2.0 -Wl,-Bdynamic" $(CURDIR)/qemu/configure --without-default-features \
-		--disable-fdt --disable-system --enable-ca11c0de --disable-rcu --meson=meson \
+		-Wl,-z,max-page-size=0x1000 -Wl,-Bstatic,-lglib-2.0 -Wl,-Bdynamic,-ldl" $(CURDIR)/qemu/configure --without-default-features \
+		--disable-fdt --disable-system --enable-ca11c0de --disable-rcu \
 		--target-list=x86_64-linux-user,aarch64-linux-user && ninja -j$(shell nproc)
 
 override_dh_auto_install:
