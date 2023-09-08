@@ -1,12 +1,23 @@
 #!/usr/bin/make -f
+include /usr/share/dpkg/architecture.mk
 
 # See debhelper(7) (uncomment to enable).
 # Output every command that modifies files on the build system.
 export DH_VERBOSE = 1
-export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+export DEB_BUILD_MAINT_OPTIONS=optimize=-lto
 
-DEB_WINE_DIR=$(CURDIR)/debian/wine-ce/usr
-DEB_QEMU_DIR=$(CURDIR)/debian/build_qemu
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_HOST_ARCH_CPU ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
+DEB_HOST_ARCH_OS ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+DEB_TARGET_ARCH ?= $(shell dpkg-architecture -qDEB_TARGET_ARCH)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+ARCH ?= $(shell arch)
+
+ROOT_DIR=$(CURDIR)
+DEB_WINE_DIR=$(ROOT_DIR)/debian/wine-ce/opt/wine-ce
+DEB_QEMU_DIR=$(ROOT_DIR)/debian/build_qemu
+WINE_DIR=$(ROOT_DIR)/wine
 PE_ARCHES="i386,aarch64,x86_64"
 
 CONFIG_PRE=i386_CC="clang -fuse-ld=lld --target=i686-pc-windows" \
@@ -16,34 +27,66 @@ CONFIG_PRE=i386_CC="clang -fuse-ld=lld --target=i686-pc-windows" \
 		aarch64_UNIX_CC="clang -fuse-ld=lld --target=aarch64-pc-linux -I/usr/aarch64-linux-gnu/include -march=armv8+lse" \
 
 
+ifneq (arm64,$(DEB_HOST_ARCH_CPU))
+	ifneq (aarch64,$(DEB_HOST_ARCH_CPU))
+		TARGET_LIST_aarch64="aarch64-linux-user"
+	endif
+endif
+ifneq (amd64,$(DEB_HOST_ARCH_CPU))
+	ifneq (x86_64,$(DEB_HOST_ARCH_CPU))
+		TARGET_LIST_x86_64="x86_64-linux-user"
+	endif
+endif
+
+# target_list like "aarch64-linux-user,x86_64-linux-user", no space
+TARGET_LIST="${TARGET_LIST_aarch64},${TARGET_LIST_x86_64}"
+
 %:
 	dh $@
 
 override_dh_auto_configure:
-	cd $(CURDIR)/wine && ./configure --prefix="$(DEB_WINE_DIR)" --disable-tests --enable-archs=$(PE_ARCHES) 
-
-
-override_dh_auto_build:
-	cd $(CURDIR)/wine && $(MAKE) -j$(shell nproc) 
 	mkdir -p $(DEB_QEMU_DIR) && cd $(DEB_QEMU_DIR) && CC=gcc CC_FOR_BUILD="$CC" CXX="$CC" HOST_CC="$CC" \
 		LDFLAGS="-Wl,-Ttext-segment=0x100000000 \
-		-Wl,-z,max-page-size=0x1000 -Wl,-Bstatic,-lglib-2.0 -Wl,-Bdynamic,-ldl" $(CURDIR)/qemu/configure --without-default-features \
+		-Wl,-z,max-page-size=0x1000 -Wl,-Bstatic,-lglib-2.0 -Wl,-Bdynamic,-ldl" $(ROOT_DIR)/qemu/configure --without-default-features \
 		--disable-fdt --disable-system --enable-ca11c0de --disable-rcu \
-		--target-list=x86_64-linux-user,aarch64-linux-user && ninja -j$(shell nproc)
+		--target-list=$(TARGET_LIST)
+	cd $(WINE_DIR) && $(CONFIG_PRE) ./configure --prefix="$(DEB_WINE_DIR)" --disable-tests --enable-archs=$(PE_ARCHES) 
+
+override_dh_auto_build:
+	cd $(WINE_DIR) && $(MAKE) -j$(shell nproc)
+	cd $(DEB_QEMU_DIR) && ninja -j$(shell nproc)
+
 
 override_dh_auto_install:
-	cd $(CURDIR)/wine && $(MAKE) install
+	cd $(WINE_DIR) && $(MAKE) install
 
 execute_after_dh_install:
-	strip $(DEB_QEMU_DIR)/qemu-x86_64 -o $(DEB_WINE_DIR)/bin/qemu-x86_64
-	strip $(DEB_QEMU_DIR)/qemu-aarch64 -o $(DEB_WINE_DIR)/bin/qemu-aarch64
-	cd $(CURDIR) && chmod +x generate_scripts.sh && ./generate_scripts.sh  $(DEB_WINE_DIR)/bin/
+	- strip $(DEB_QEMU_DIR)/qemu-x86_64 -o $(DEB_WINE_DIR)/bin/qemu-x86_64
+	- strip $(DEB_QEMU_DIR)/qemu-aarch64 -o $(DEB_WINE_DIR)/bin/qemu-aarch64
+	cd $(ROOT_DIR) && chmod +x generate_scripts.sh && ./generate_scripts.sh  $(DEB_WINE_DIR)/bin/
 
 override_dh_makeshlibs:
 	# avoid unnecessary calls to ldconfig
 	dh_makeshlibs -n
 
+override_dh_dwz:
+
+override_dh_strip:
 
 override_dh_auto_clean:
 	rm -rf $(DEB_QEMU_DIR)	
 	rm -rf $(DEB_WINE_DIR)
+	rm -rf $(CURDIR)/qemu/scripts/tracetool/backend/__pycache__/*.pyc
+	rm -rf $(CURDIR)/qemu/scripts/tracetool/format/__pycache__/*.pyc
+	rm -rf $(CURDIR)/qemu/scripts/tracetool/__pycache__/*.pyc
+	rm -rf $(CURDIR)/qemu/scripts/qapi/__pycache__/*.pyc
+	rm -rf $(CURDIR)/wine/wine
+
+execute_after_dh_clean:
+	echo $(TARGET_LIST) 
+	echo $(DEB_HOST_GNU_TYPE)
+	echo $(DEB_HOST_ARCH_CPU)
+	echo $(DEB_HOST_ARCH_OS)
+	echo "4..$(DEB_TARGET_ARCH)"
+	echo "5..$(ARCH)"
+	echo "6...$(DEB_BUILD_GNU_TYPE)"
