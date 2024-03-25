@@ -1,0 +1,16 @@
+Description: fix rust build issue on riscv64 
+Author: Bo YU <tsu.yubo@gmail.com> 
+Last-Update: 2024-01-26
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -200,6 +200,8 @@
+     rust_abi_target = "aarch64-unknown-linux-gnu"
+   } else if (current_cpu == "ppc64") {
+     rust_abi_target = "powerpc64le-unknown-linux-gnu"
++  } else if (current_cpu == "riscv64") {
++    rust_abi_target = "riscv64gc-unknown-linux-gnu"
+   } else if (current_cpu == "x86") {
+     rust_abi_target = "i686-unknown-linux-gnu"
+   } else if (current_cpu == "x64") {
