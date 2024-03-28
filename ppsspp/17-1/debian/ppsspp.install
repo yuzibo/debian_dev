@@ -1,0 +1,3 @@
+debian/build/lib/*.a /usr/lib/ppsspp
+debian/build/PPSSPPSDL /usr/bin
+debian/build/assets/ /usr/bin

@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+# You must remove unused comment lines for the released package.
+export DH_VERBOSE = 1
+include /usr/share/dpkg/architecture.mk
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+
+
+#	dh_auto_configure -- \
+#	      -DCMAKE_LIBRARY_ARCHITECTURE="$(DEB_TARGET_MULTIARCH)"
+#
+#
+%:
+	dh $@ 
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf $(CURDIR)/debian/build
+	rm -rf $(CURDIR)/build
+
+#override_dh_auto_configure:
+
+
+
+override_dh_auto_build:
+	./b.sh
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	# x86 and riscv64 is different here
+	sed -i -e 's/\-P/\-DCOMPONENT\=ppsspp\ \-P/g' obj-$(DEB_HOST_MULTIARCH)/Makefile
+	dh_auto_install --destdir=debian/ppsspp
+	cp -r ./build ./debian
+	echo $(CUR)

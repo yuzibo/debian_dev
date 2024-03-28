@@ -1,0 +1,42 @@
+--- a/git-version.cmake
++++ b/git-version.cmake
+@@ -3,18 +3,18 @@
+ set(GIT_VERSION_UPDATE "1")
+ 
+ find_package(Git)
+-if(GIT_FOUND AND EXISTS "${SOURCE_DIR}/.git/")
+-	execute_process(COMMAND ${GIT_EXECUTABLE} describe --always
+-		WORKING_DIRECTORY ${SOURCE_DIR}
+-		RESULT_VARIABLE exit_code
+-		OUTPUT_VARIABLE GIT_VERSION)
+-	if(NOT ${exit_code} EQUAL 0)
+-		message(WARNING "git describe failed, unable to include version.")
+-	endif()
+-	string(STRIP ${GIT_VERSION} GIT_VERSION)
+-else()
+-	message(WARNING "git not found, unable to include version.")
+-endif()
++#if(GIT_FOUND AND EXISTS "${SOURCE_DIR}/.git/")
++#	execute_process(COMMAND ${GIT_EXECUTABLE} describe --always
++#		WORKING_DIRECTORY ${SOURCE_DIR}
++#		RESULT_VARIABLE exit_code
++#		OUTPUT_VARIABLE GIT_VERSION)
++#	if(NOT ${exit_code} EQUAL 0)
++#		message(WARNING "git describe failed, unable to include version.")
++#	endif()
++#	string(STRIP ${GIT_VERSION} GIT_VERSION)
++#else()
++#	message(WARNING "git not found, unable to include version.")
++#endif()
+ 
+ if(EXISTS ${GIT_VERSION_FILE})
+ 	# Don't update if marked not to update.
+@@ -33,6 +33,8 @@
+ 	endif()
+ endif()
+ 
++set(GIT_VERSION "1.17.1")
++
+ set(code_string "// This is a generated file.\n\n"
+ 	"const char *PPSSPP_GIT_VERSION = \"${GIT_VERSION}\"\;\n\n"
+ 	"// If you don't want this file to update/recompile, change to 1.\n"
