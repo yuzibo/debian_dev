@@ -1,0 +1,10 @@
+--- a/third_party/cpuinfo/src/src/riscv/linux/riscv-hw.c
++++ b/third_party/cpuinfo/src/src/riscv/linux/riscv-hw.c
+@@ -8,7 +8,6 @@
+ #ifdef __has_include
+ #if __has_include(<sys/hwprobe.h>)
+ #define CPUINFO_RISCV_LINUX_HAVE_C_HWPROBE
+-#include <sys/hwprobe.h>
+ #endif
+ #endif
+ #endif

@@ -1,0 +1,11 @@
+--- a/third_party/ffmpeg/chromium/scripts/generate_gn.py
++++ b/third_party/ffmpeg/chromium/scripts/generate_gn.py
+@@ -77,7 +77,7 @@
+ _Attrs = ('ARCHITECTURE', 'TARGET', 'PLATFORM')
+ Attr = collections.namedtuple('Attr', _Attrs)(*_Attrs)
+ SUPPORT_MATRIX = {
+-    Attr.ARCHITECTURE: set(['ia32', 'x64', 'arm', 'arm64', 'arm-neon', 'ppc64']),
++    Attr.ARCHITECTURE: set(['ia32', 'x64', 'arm', 'arm64', 'arm-neon', 'ppc64', 'riscv64']),
+     Attr.TARGET: set(['Chromium', 'Chrome', 'ChromeOS']),
+     Attr.PLATFORM: set(['android', 'linux', 'win', 'mac'])
+ }
